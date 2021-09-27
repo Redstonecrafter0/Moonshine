@@ -12,6 +12,7 @@
         <module>Redstonecloud-Manager</module>
         <module>Redstonecloud-Plugin</module>
         <module>Redstonecloud-API</module>
+        <module>Redstonecloud-DiscordBot-Plugin</module>
     </modules>
 
     <properties>

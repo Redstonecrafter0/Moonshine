@@ -1,13 +1,9 @@
 package net.redstonecraft.redstonecloud.manager;
 
-import net.redstonecraft.redstoneapi.json.JSONObject;
 import net.redstonecraft.redstoneapi.json.parser.JSONParser;
 import net.redstonecraft.redstonecloud.manager.utils.Configuration;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.ParseException;
@@ -20,7 +16,8 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Launcher {
 
-    private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss");
+    private static final SimpleDateFormat simpleDateFormatParse = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void main(String[] args) throws Throwable {
         simpleDateFormat.setLenient(true);
@@ -29,7 +26,7 @@ public class Launcher {
             logsFolder.mkdirs();
         }
         File latestLog = new File(logsFolder, "latest.log");
-        if (latestLog.exists()) {
+        if (latestLog.exists() && latestLog.isFile()) {
             try {
                 FileInputStream is = new FileInputStream(latestLog);
                 is.read();
@@ -45,15 +42,22 @@ public class Launcher {
                 }
                 is.close();
                 try {
-                    Date date = simpleDateFormat.parse(sb.toString());
-                    try (GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(simpleDateFormat.format(date) + ".log.gz"))) {
-                        is = new FileInputStream(latestLog);
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = is.read(buffer)) > 0) {
-                            gzip.write(buffer, 0, len);
+                    Date date = simpleDateFormatParse.parse(sb.toString());
+                    File file = new File(logsFolder, simpleDateFormat.format(date) + ".log.gz");
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        try (GZIPOutputStream gzip = new GZIPOutputStream(fos)) {
+                            is = new FileInputStream(latestLog);
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = is.read(buffer)) > 0) {
+                                gzip.write(buffer, 0, len);
+                            }
+                            is.close();
+                            gzip.finish();
                         }
-                        is.close();
                     }
                 } catch (ParseException ignored) {
                 }

@@ -1,0 +1,7 @@
+name: Redstonecloud
+main: net.redstonecraft.redstonecloud.plugin.RedstonecloudBungee
+author: Redstonecrafter0
+description: This plugin works as an bridge to the Redstonecloud-Manager for plugin dependent cloud controlling.
+version: 1.0
+depends:
+  - RedstoneAPI

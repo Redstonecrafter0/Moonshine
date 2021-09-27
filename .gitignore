@@ -1,1 +1,7 @@
 .idea
+config.json
+*.iml
+*/dependency-reduced-pom.xml
+target
+data
+logs

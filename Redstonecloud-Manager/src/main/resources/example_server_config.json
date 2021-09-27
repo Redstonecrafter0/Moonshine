@@ -1,0 +1,9 @@
+{
+  "jre_path": "",
+  "jvm_args": [],
+  "jar": "server.jar",
+  "args": ["nogui"],
+  "handling": "DYNAMIC",
+  "maxInstances": 5,
+  "maxPlayers": 10
+}
