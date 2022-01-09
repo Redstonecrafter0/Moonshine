@@ -1,7 +1,0 @@
-{
-  "name": "Redstonecloud Discord Bot",
-  "version": "1.0",
-  "main": "net.redstonecraft.redstoneclouddcbot.RedstonecloudDiscordBot",
-  "author": "Redstonecrafter0",
-  "description": "This is a DiscordBot to bring the terminal to Discord."
-}

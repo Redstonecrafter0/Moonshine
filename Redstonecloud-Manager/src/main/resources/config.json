@@ -1,8 +1,0 @@
-{
-  "webserver": {
-    "enabled": false,
-    "host": "",
-    "port": 80,
-    "logging": true
-  }
-}
