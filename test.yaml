@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redstonecloud-manager
+  labels:
+    app: redstonecloud-manager
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: redstonecloud-manager
+      labels:
+        app: redstonecloud-manager
+    spec:
+      containers:
+        - name: redstonecloud-manager
+          image: local
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: redstonecloud-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redstonecloud
+spec:
+  selector:
+    app: redstonecloud-manager
+  ports:
+    - port: 25565
+  type: NodePort

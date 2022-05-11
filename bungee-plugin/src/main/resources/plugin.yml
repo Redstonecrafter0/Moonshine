@@ -1,8 +1,0 @@
-website: redstonecrafter0.github.io/Redstonecloud
-name: Redstonecloud
-version: 1.0
-description: This plugin works as an bridge to the Redstonecloud-Manager for plugin dependent cloud controlling.
-depend:
-  - RedstoneAPI
-author: Redstonecrafter0
-main: net.redstonecraft.redstonecloud.plugin.RedstonecloudPluginBukkit

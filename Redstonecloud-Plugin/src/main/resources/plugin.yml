@@ -1,0 +1,4 @@
+name: Redstonecloud-Plugin
+main: net.redstonecraft.redstonecloud.RedstonecloudBukkit
+version: ${project.version}
+description: 'Bukkit/Spigot/Paper integration for a cloud-native Minecraft network.'

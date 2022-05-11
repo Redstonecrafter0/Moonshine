@@ -1,0 +1,4 @@
+name: Redstonecloud-Plugin
+main: net.redstonecraft.redstonecloud.RedstonecloudBungee
+version: ${project.version}
+description: 'Bungeecord/Waterfall integration for a cloud-native Minecraft network.'
