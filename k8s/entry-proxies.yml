@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: entry-proxy
+  labels:
+    app: entry-proxy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: entry-proxy
+      labels:
+        app: entry-proxy
+    spec:
+      containers:
+        - name: entry-proxy
+          image: derkades/waterfall
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 25565
+              name: mc
+          volumeMounts:
+            - name: config-volume
+              mountPath: /data/config.yml
+              subPath: config.yml
+          tty: true
+          stdin: true
+      restartPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: entry-proxy-configmap
+  selector:
+    matchLabels:
+      app: entry-proxy

@@ -36,8 +36,6 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.springframework.boot:spring-boot-starter-web:2.6.7")
-    implementation("org.slf4j:slf4j-jdk14:1.7.36")
-    implementation("org.apache.logging.log4j:log4j-slf4j18-impl:2.17.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("redis.clients:jedis:2.8.1")
 
