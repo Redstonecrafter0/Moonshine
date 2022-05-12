@@ -39,20 +39,18 @@ dependencies {
     implementation("org.slf4j:slf4j-jdk14:1.7.36")
     implementation("org.apache.logging.log4j:log4j-slf4j18-impl:2.17.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("redis.clients:jedis:2.8.1")
 
     val bukkitVersion: String by project
     val bungeeVersion: String by project
     val spongeVersion: String by project
     val velocityVersion: String by project
-    val kryptonVersion: String by project
 
     compileOnly("org.bukkit:bukkit:$bukkitVersion")
     compileOnly("net.md-5:bungeecord-api:$bungeeVersion")
     compileOnly("org.spongepowered:spongeapi:$spongeVersion")
     compileOnly("com.velocitypowered:velocity-api:$velocityVersion")
     kapt("com.velocitypowered:velocity-api:$velocityVersion")
-    compileOnly("org.kryptonmc:krypton-api:$kryptonVersion")
-    kapt("org.kryptonmc", "krypton-annotation-processor", kryptonVersion)
 }
 
 sponge {

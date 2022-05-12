@@ -1,9 +1,8 @@
 package net.redstonecraft.redstonecloud.plugin.proxy
 
 import java.net.InetSocketAddress
-import java.util.*
 
-data class ServerInfo(val name: String = UUID.randomUUID().toString(), val socketAddress: InetSocketAddress)
+data class ServerInfo(val name: String, val socketAddress: InetSocketAddress)
 
 interface IProxy {
 

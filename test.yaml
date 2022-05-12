@@ -16,6 +16,15 @@ spec:
         - name: redstonecloud-manager
           image: local
           imagePullPolicy: IfNotPresent
+          env:
+            - name: REDSTONECLOUD_SUB_SERVER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REDSTONECLOUD_SUB_SERVER_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
       restartPolicy: Always
   selector:
     matchLabels:

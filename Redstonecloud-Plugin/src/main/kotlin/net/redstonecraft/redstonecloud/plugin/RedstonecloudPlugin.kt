@@ -3,6 +3,10 @@ package net.redstonecraft.redstonecloud.plugin
 import net.redstonecraft.redstonecloud.plugin.proxy.IProxy
 import org.slf4j.Logger
 import net.redstonecraft.redstonecloud.plugin.metrics.startMetricsServer
+import net.redstonecraft.redstonecloud.plugin.proxy.ServerInfo
+import redis.clients.jedis.Jedis
+import java.net.InetSocketAddress
+import java.util.*
 
 /**
  * The entrypoint where all the magic happens.
@@ -34,17 +38,23 @@ sealed interface RedstonecloudPlugin {
         object Database {
             object SubServer {
                 private val dbHost = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_HOST") ?: error("No db host")
-                private val dbPort = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PORT") ?: error("No db port")
-                private val dbName = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_NAME") ?: error("No database")
-                private val dbUser = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_USERNAME") ?: error("No db user")
-                private val dbPass = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PASSWORD") ?: error("No db password")
+                private val dbPort = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PORT")?.toIntOrNull() ?: error("No db port")
+                private val dbPass = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PASSWORD")
+                val dbSetKey = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_KEY_SET") ?: error("No db set key")
+                val dbMapKey = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_KEY_MAP") ?: error("No db map key")
+                val name = System.getenv("REDSTONECLOUD_SUB_SERVER_NAME") ?: error("No name")
+                val podIp = System.getenv("REDSTONECLOUD_SUB_SERVER_IP") ?: error("No ip")
+                val connection by lazy { Jedis(dbHost, dbPort).apply { if (dbPass != null) auth(dbPass) } }
             }
             object Proxy {
                 private val dbHost = System.getenv("REDSTONECLOUD_PROXY_DB_HOST") ?: error("No db host")
-                private val dbPort = System.getenv("REDSTONECLOUD_PROXY_DB_PORT") ?: error("No db port")
-                private val dbName = System.getenv("REDSTONECLOUD_PROXY_DB_NAME") ?: error("No database")
-                private val dbUser = System.getenv("REDSTONECLOUD_PROXY_DB_USERNAME") ?: error("No db user")
-                private val dbPass = System.getenv("REDSTONECLOUD_PROXY_DB_PASSWORD") ?: error("No db password")
+                private val dbPort = System.getenv("REDSTONECLOUD_PROXY_DB_PORT")?.toIntOrNull() ?: error("No db port")
+                private val dbPass = System.getenv("REDSTONECLOUD_PROXY_DB_PASSWORD")
+                val dbSetKey = System.getenv("REDSTONECLOUD_PROXY_DB_KEY_SET") ?: error("No db set key")
+                val dbMapKey = System.getenv("REDSTONECLOUD_PROXY_DB_KEY_MAP") ?: error("No db map key")
+                val reload = System.getenv("REDSTONECLOUD_PROXY_REFRESH_TIME")?.toLongOrNull() ?: error("No refresh time")
+                val connection by lazy { Jedis(dbHost, dbPort).apply { if (dbPass != null) auth(dbPass) } }
+                val timer = Timer()
             }
         }
         private val isSubServer = System.getenv("REDSTONECLOUD_SUB_SERVER")?.toBoolean() ?: false
@@ -59,12 +69,37 @@ sealed interface RedstonecloudPlugin {
 
     fun enable() {
         realInstance = this
-        if (isProxy && pluginEnvironment.isProxy) {
-        }
         startMetricsServer()
+        if (isProxy && pluginEnvironment.isProxy) {
+            Database.Proxy.timer.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    val allServers = Database.Proxy.connection.smembers(Database.Proxy.dbSetKey)
+                    val previousServers = proxy.server.map { it.name }.toSet()
+                    val newServers = allServers - previousServers
+                    val oldServers = previousServers - allServers
+                    proxy.server.filter { it.name in oldServers }.forEach { proxy.removeServer(it) }
+                    newServers.forEach {
+                        proxy.addServer(ServerInfo(it, Database.Proxy.connection.hget(Database.Proxy.dbMapKey, it).toInetSocketAddress()))
+                    }
+                }
+            }, 0L, Database.Proxy.reload)
+        }
+        if (isSubServer) {
+            Database.SubServer.connection.hset(Database.SubServer.dbMapKey, Database.SubServer.name, "${Database.SubServer.podIp}:$port")
+            Database.SubServer.connection.sadd(Database.SubServer.dbSetKey, Database.SubServer.name)
+        }
     }
 
     fun disable() {
+        if (isSubServer) {
+            Database.SubServer.connection.srem(Database.SubServer.dbSetKey, Database.SubServer.name)
+            Database.SubServer.connection.hdel(Database.SubServer.dbMapKey, Database.SubServer.name)
+        }
+    }
+
+    private fun String.toInetSocketAddress(): InetSocketAddress {
+        val (host, port) = split(":", limit = 2)
+        return InetSocketAddress(host, port.toInt())
     }
 
 }
