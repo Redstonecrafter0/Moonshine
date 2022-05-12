@@ -11,6 +11,15 @@ To horizontally scale the system, the plugin provides some metrics to Kubernetes
 You can join [here](https://discord.gg/aZKuas4) to discuss this project or use the discussion tab.
 
 ## Concept
+The concept is to take advantage of how Kubernetes is built.
+We have 3 layers in this example, but you can do whatever you want.
+After going through the LoadBalancer the player connects to one of the Entry Proxies.
+Every Entry Proxy knows the Services of the Game Proxies which are load balanced as well.
+Game Proxies are there to organize your network. So Game Proxies build up groups (one group for lobbies, one group for Skyblock, etc.) and know each Game Server.
+So the load can be balanced across the network.
+Additionally, this plugin provides metrics to allow horizontal scaling using something like player count to limit player count on a Game Server if the game is built to be 2v2 for example.
+On top of that, this plugin provides an API on Proxy Servers to programmatically create Game Servers for something like private Game Servers.
+
 ```mermaid
 flowchart TB
     entrypoint[Entrypoint] --> loadbalancer[Load Balancer]:::service --> proxy_1 & proxy_2 --> lobby_entrypoint & game_1_entrypoint & game_2_entrypoint

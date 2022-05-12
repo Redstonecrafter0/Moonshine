@@ -1,9 +1,9 @@
-package net.redstonecraft.redstonecloud.metrics
+package net.redstonecraft.redstonecloud.plugin.metrics
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.redstonecraft.redstonecloud.RedstonecloudPlugin
+import net.redstonecraft.redstonecloud.plugin.RedstonecloudPlugin
 import org.springframework.boot.runApplication
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

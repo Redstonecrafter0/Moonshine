@@ -1,4 +1,4 @@
-package net.redstonecraft.redstonecloud.proxy
+package net.redstonecraft.redstonecloud.plugin.proxy
 
 import java.net.InetSocketAddress
 import java.util.*

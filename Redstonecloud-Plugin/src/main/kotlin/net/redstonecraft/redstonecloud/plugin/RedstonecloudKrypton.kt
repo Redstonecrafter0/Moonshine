@@ -1,7 +1,7 @@
-package net.redstonecraft.redstonecloud
+package net.redstonecraft.redstonecloud.plugin
 
 import com.google.inject.Inject
-import net.redstonecraft.redstonecloud.proxy.DummyProxy
+import net.redstonecraft.redstonecloud.plugin.proxy.DummyProxy
 import org.apache.logging.log4j.Logger
 import org.apache.logging.log4j.spi.ExtendedLogger
 import org.apache.logging.slf4j.Log4jLogger
@@ -15,7 +15,7 @@ import org.kryptonmc.api.plugin.annotation.Plugin
 @Plugin(
     id = "redstonecloud-plugin",
     name = "Redstonecloud-Plugin",
-    version = "1.0.0",
+    version = "0.1.0",
     description = "Krypton integration for a cloud-native Minecraft network.",
     authors = ["Redstonecrafter0"]
 )

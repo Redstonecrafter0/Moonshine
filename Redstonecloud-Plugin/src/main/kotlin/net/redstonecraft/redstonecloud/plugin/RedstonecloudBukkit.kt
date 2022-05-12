@@ -1,6 +1,6 @@
-package net.redstonecraft.redstonecloud
+package net.redstonecraft.redstonecloud.plugin
 
-import net.redstonecraft.redstonecloud.proxy.DummyProxy
+import net.redstonecraft.redstonecloud.plugin.proxy.DummyProxy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import org.slf4j.Logger

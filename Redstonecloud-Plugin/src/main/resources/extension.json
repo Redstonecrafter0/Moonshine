@@ -1,5 +1,0 @@
-{
-  "entrypoint": "net.redstonecraft.redstonecloud.RedstonecloudMinestom",
-  "name": "Redstonecloud-Plugin",
-  "version": "${project.version}"
-}

@@ -1,4 +1,4 @@
-package net.redstonecraft.redstonecloud
+package net.redstonecraft.redstonecloud.plugin
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.PostOrder
@@ -7,13 +7,13 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
-import net.redstonecraft.redstonecloud.proxy.VelocityProxy
+import net.redstonecraft.redstonecloud.plugin.proxy.VelocityProxy
 import org.slf4j.Logger
 
 @Plugin(
     id = "redstonecloud-plugin",
     name = "Redstonecloud-Plugin",
-    version = "1.0.0",
+    version = "0.1.0",
     description = "Velocity integration for a cloud-native Minecraft network.",
     url = "https://github.com/Redstonecrafter0/Redstonecloud",
     authors = ["Redstonecrafter0"]

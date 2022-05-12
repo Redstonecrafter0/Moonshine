@@ -1,13 +1,8 @@
-package net.redstonecraft.redstonecloud
+package net.redstonecraft.redstonecloud.plugin
 
-import net.redstonecraft.redstonecloud.proxy.IProxy
+import net.redstonecraft.redstonecloud.plugin.proxy.IProxy
 import org.slf4j.Logger
-import java.net.InetAddress
-import net.redstonecraft.redstonecloud.metrics.startMetricsServer
-import net.redstonecraft.redstonecloud.proxy.ServerInfo
-import java.net.InetSocketAddress
-import java.util.*
-import kotlin.random.Random
+import net.redstonecraft.redstonecloud.plugin.metrics.startMetricsServer
 
 /**
  * The entrypoint where all the magic happens.

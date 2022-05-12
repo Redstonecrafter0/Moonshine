@@ -3,5 +3,7 @@ config.json
 *.iml
 */dependency-reduced-pom.xml
 target
+build
+.gradle
 data
 logs

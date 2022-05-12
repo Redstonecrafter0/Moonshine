@@ -1,8 +1,8 @@
-package net.redstonecraft.redstonecloud
+package net.redstonecraft.redstonecloud.plugin
 
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
-import net.redstonecraft.redstonecloud.proxy.BungeeProxy
+import net.redstonecraft.redstonecloud.plugin.proxy.BungeeProxy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
