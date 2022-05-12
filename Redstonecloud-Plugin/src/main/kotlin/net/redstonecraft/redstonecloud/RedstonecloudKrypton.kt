@@ -26,6 +26,8 @@ class RedstonecloudKrypton @Inject constructor(val server: Server, val logger: L
     override val connectionCount: Int
         get() = server.players.size
     override val loggerImpl = Log4jLogger(Log4jMarkerFactory(), logger as ExtendedLogger, logger.name)
+    override val port: Int
+        get() = server.address.port
 
     @Listener
     fun onStart(event: ServerStartEvent) = enable()

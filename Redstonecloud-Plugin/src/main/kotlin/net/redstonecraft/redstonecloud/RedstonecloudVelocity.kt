@@ -28,9 +28,10 @@ class RedstonecloudVelocity @Inject constructor(
 
     override val loggerImpl: Logger
         get() = logger
-
     override val connectionCount: Int
         get() = server.playerCount
+    override val port: Int
+        get() = server.boundAddress.port
 
     @Subscribe(order = PostOrder.FIRST)
     fun onInit(event: ProxyInitializeEvent) = enable()

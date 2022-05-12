@@ -7,6 +7,10 @@ import net.redstonecraft.redstonecloud.RedstonecloudPlugin
 import org.springframework.boot.runApplication
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.web.server.ConfigurableWebServerFactory
+import org.springframework.boot.web.server.WebServerFactoryCustomizer
+import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
@@ -40,7 +44,6 @@ data class Metric(val kind: String = "MetricValueList", val apiVersion: String =
                   val metadata: Metadata = Metadata(), val items: List<Item>) {
 
     companion object {
-
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
     }
 
@@ -65,4 +68,18 @@ data class Metric(val kind: String = "MetricValueList", val apiVersion: String =
                                val apiVersion: String = "/v1beta1")
 }
 
-fun startMetricsServer() = runApplication<MetricsController>()
+@Component
+class ServerPortCustomizer : WebServerFactoryCustomizer<ConfigurableWebServerFactory> {
+    override fun customize(factory: ConfigurableWebServerFactory) {
+        factory.setPort(80)
+    }
+}
+
+@SpringBootApplication
+open class MetricsApplication
+
+fun startMetricsServer() = runApplication<MetricsApplication>()
+
+fun main() {
+    startMetricsServer()
+}

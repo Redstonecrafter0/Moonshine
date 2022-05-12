@@ -10,6 +10,8 @@ class RedstonecloudBukkit: JavaPlugin(), RedstonecloudPlugin {
 
     override val pluginEnvironment = PluginEnvironment.BUKKIT
     override val proxy = DummyProxy
+    override val port: Int
+        get() = server.port
 
     override val loggerImpl: Logger = LoggerFactory.getLogger(logger.name)
 

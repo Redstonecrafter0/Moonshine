@@ -1,66 +1,75 @@
 package net.redstonecraft.redstonecloud
 
-import net.redstonecraft.redstonecloud.discovery.UDPClient
-import net.redstonecraft.redstonecloud.discovery.UDPServer
 import net.redstonecraft.redstonecloud.proxy.IProxy
 import org.slf4j.Logger
 import java.net.InetAddress
+import net.redstonecraft.redstonecloud.metrics.startMetricsServer
+import net.redstonecraft.redstonecloud.proxy.ServerInfo
+import java.net.InetSocketAddress
+import java.util.*
+import kotlin.random.Random
 
+/**
+ * The entrypoint where all the magic happens.
+ *
+ * @property pluginEnvironment Specifies what system is running this plugin.
+ * @property proxy Reference to the ProxyServer to modify known Servers.
+ * @property connectionCount Gets the current amount of open connections.
+ * @property loggerImpl Reference to the internal Logger over SLF4J.
+ * @property port Returns the port the server is running on.
+ * */
 sealed interface RedstonecloudPlugin {
 
     val pluginEnvironment: PluginEnvironment
     val proxy: IProxy
     val connectionCount: Int
     val loggerImpl: Logger
+    val port: Int
 
+    /**
+     * Accessor for plugin properties and reference to the real plugin instance.
+     *
+     * @property pluginEnvironment Specifies what system is running this plugin.
+     * @property proxy Reference to the ProxyServer to modify known Servers.
+     * @property connectionCount Gets the current amount of open connections.
+     * @property logger Reference to the internal Logger over SLF4J.
+     * */
     companion object Instance {
-        private val port = System.getenv("REDSTONECLOUD_DISCOVER_PORT")?.toIntOrNull() ?: 3515
-        private val discoverHost: String? = System.getenv("REDSTONECLOUD_DISCOVER_ADDRESS") ?: "224.0.2.30"
-        private val knownProxies = mutableSetOf<String>()
-        private val subServer = mutableSetOf<String>()
-        lateinit var realInstance: RedstonecloudPlugin private set
-        val pluginEnvironment: PluginEnvironment get() = realInstance.pluginEnvironment
-        val proxy: IProxy get() = realInstance.proxy
-        val connectionCount: Int get() = realInstance.connectionCount
-        val logger: Logger get() = realInstance.loggerImpl
+
+        object Database {
+            object SubServer {
+                private val dbHost = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_HOST") ?: error("No db host")
+                private val dbPort = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PORT") ?: error("No db port")
+                private val dbName = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_NAME") ?: error("No database")
+                private val dbUser = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_USERNAME") ?: error("No db user")
+                private val dbPass = System.getenv("REDSTONECLOUD_SUB_SERVER_DB_PASSWORD") ?: error("No db password")
+            }
+            object Proxy {
+                private val dbHost = System.getenv("REDSTONECLOUD_PROXY_DB_HOST") ?: error("No db host")
+                private val dbPort = System.getenv("REDSTONECLOUD_PROXY_DB_PORT") ?: error("No db port")
+                private val dbName = System.getenv("REDSTONECLOUD_PROXY_DB_NAME") ?: error("No database")
+                private val dbUser = System.getenv("REDSTONECLOUD_PROXY_DB_USERNAME") ?: error("No db user")
+                private val dbPass = System.getenv("REDSTONECLOUD_PROXY_DB_PASSWORD") ?: error("No db password")
+            }
+        }
+        private val isSubServer = System.getenv("REDSTONECLOUD_SUB_SERVER")?.toBoolean() ?: false
+        private val isProxy = System.getenv("REDSTONECLOUD_PROXY")?.toBoolean() ?: false
+        lateinit var realInstance: RedstonecloudPlugin
+            private set
+        val pluginEnvironment: PluginEnvironment by realInstance::pluginEnvironment
+        val proxy: IProxy by realInstance::proxy
+        val connectionCount: Int by realInstance::connectionCount
+        val logger: Logger by realInstance::loggerImpl
     }
 
     fun enable() {
         realInstance = this
-        if (pluginEnvironment.isProxy) {
-            UDPServer(port) { it, address ->
-                val (cmd, a) = it.drop(1).split(" ")
-                when (cmd) {
-                    "reg" -> knownProxies += a
-                    "ureg" -> knownProxies -= a
-                    "up" -> subServer += a
-                    "down" -> subServer -= a
-                }
-                if (it[0] == '1') {
-                    knownProxies.forEach { UDPClient(InetAddress.getByName(it), port).send("0$cmd $a\u0000") }
-                    if (cmd == "reg") {
-                        UDPClient(address, port).send("${knownProxies.joinToString(" ")}\n${subServer.joinToString(" ")}")
-                    }
-                }
-            }.start()
-            UDPClient(InetAddress.getByName(subDiscoverHost), port).send("1reg ${InetAddress.getLocalHost().hostAddress}\u0000") {
-                val (proxies, subs) = it.split("\n")
-                knownProxies += proxies.split(" ")
-                subServer += subs.split(" ")
-            }
+        if (isProxy && pluginEnvironment.isProxy) {
         }
-        if (discoverHost != null || !pluginEnvironment.isProxy) {
-            UDPClient(InetAddress.getByName(discoverHost), port).send("1up ${InetAddress.getLocalHost().hostAddress}\u0000")
-        }
+        startMetricsServer()
     }
 
     fun disable() {
-        if (discoverHost != null) {
-            UDPClient(InetAddress.getByName(discoverHost), port).send("1down ${InetAddress.getLocalHost().hostAddress}\u0000")
-        }
-        if (pluginEnvironment.isProxy) {
-            UDPClient(InetAddress.getByName(subDiscoverHost), port).send("1ureg ${InetAddress.getLocalHost().hostAddress}\u0000")
-        }
     }
 
 }

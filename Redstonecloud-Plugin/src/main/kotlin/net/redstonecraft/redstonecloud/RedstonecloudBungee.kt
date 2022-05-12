@@ -10,6 +10,8 @@ class RedstonecloudBungee: Plugin(), RedstonecloudPlugin {
 
     override val pluginEnvironment = PluginEnvironment.BUNGEE
     override val proxy by lazy { BungeeProxy(ProxyServer.getInstance()) }
+    override val port: Int
+        get() = getProxy().config.listeners.first().host.port
 
     override val connectionCount: Int
         get() = ProxyServer.getInstance().onlineCount

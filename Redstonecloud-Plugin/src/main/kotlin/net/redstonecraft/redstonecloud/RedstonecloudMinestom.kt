@@ -13,6 +13,8 @@ class RedstonecloudMinestom: Extension(), RedstonecloudPlugin {
         get() = MinecraftServer.getConnectionManager().onlinePlayers.size
     override val loggerImpl: Logger
         get() = logger
+    override val port: Int
+        get() = MinecraftServer.getServer().port
 
     override fun initialize() = enable()
     override fun terminate() = disable()

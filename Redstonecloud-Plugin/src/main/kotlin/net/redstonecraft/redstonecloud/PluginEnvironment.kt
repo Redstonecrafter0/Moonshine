@@ -1,5 +1,5 @@
 package net.redstonecraft.redstonecloud
 
-enum class PluginEnvironment(val isProxy: Boolean = true) {
-    BUKKIT(false), SPONGE(false), MINESTOM(false), KRYPTON(false), BUNGEE, VELOCITY;
+enum class PluginEnvironment(val isProxy: Boolean = false) {
+    BUKKIT, SPONGE, MINESTOM, KRYPTON, BUNGEE(true), VELOCITY(true);
 }
