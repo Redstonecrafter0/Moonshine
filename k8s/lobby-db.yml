@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobby-db
+  labels:
+    app: lobby-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: lobby-db
+      labels:
+        app: lobby-db
+    spec:
+      containers:
+        - name: lobby-db
+          image: redis
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+              name: redis
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: lobby-db

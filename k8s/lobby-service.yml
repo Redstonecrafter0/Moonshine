@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: network-service
+  name: lobby-service
   labels:
-    app: entry-proxy
+    app: lobby-proxy
 spec:
   selector:
-    app: entry-proxy
+    app: lobby-proxy
   ports:
     - port: 25565
       targetPort: 25565
-      nodePort: 30065
       name: mc
       protocol: TCP
-  type: LoadBalancer
+  type: ClusterIP

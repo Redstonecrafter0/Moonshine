@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobby-proxy
+  labels:
+    app: lobby-proxy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: lobby-proxy
+      labels:
+        app: lobby-proxy
+    spec:
+      containers:
+        - name: lobby-proxy
+          image: derkades/waterfall
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 25565
+              name: mc
+          volumeMounts:
+            - name: config-volume
+              mountPath: /data/config.yml
+              subPath: config.yml
+          tty: true
+          stdin: true
+          env:
+            - name: REDSTONECLOUD_PROXY
+              value: 'true'
+      restartPolicy: Always
+      volumes:
+        - name: config-volume
+          configMap:
+            name: lobby-proxy-configmap
+  selector:
+    matchLabels:
+      app: lobby-proxy

@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobby-subservers
+  labels:
+    app: lobby-subservers
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: lobby-subservers
+      labels:
+        app: lobby-subservers
+    spec:
+      containers:
+        - name: lobby-subservsers
+          image: daweedpanic/papermc:1.18.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 25565
+              name: mc
+#          volumeMounts:
+#            - name: config-volume
+#              mountPath: /data/config.yml
+#              subPath: config.yml
+          tty: true
+          stdin: true
+          env:
+            - name: REDSTONECLOUD_SUB_SERVER
+              value: 'true'
+            - name: REDSTONECLOUD_SUB_SERVER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REDSTONECLOUD_SUB_SERVER_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: REDSTONECLOUD_SUB_SERVER_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_SUB_SERVER_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_SUB_SERVER_DB_KEY_SET
+              valueFrom:
+                secretKeyRef:
+                  key: set-key
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_SUB_SERVER_DB_KEY_MAP
+              valueFrom:
+                secretKeyRef:
+                  key: map-key
+                  name: lobby-db-secret
+      restartPolicy: Always
+#      volumes:
+#        - name: config-volume
+#          configMap:
+#            name: lobby-subservers-configmap
+  selector:
+    matchLabels:
+      app: lobby-subservers
