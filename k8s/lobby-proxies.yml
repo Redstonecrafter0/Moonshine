@@ -16,6 +16,15 @@ spec:
         - name: lobby-proxy
           image: derkades/waterfall
           imagePullPolicy: IfNotPresent
+          command:
+            - java
+            - -server
+            - -Xmx512M
+            - -Xms512M
+            - -DIReallyKnowWhatIAmDoingISwear
+            - -Dwaterfall.packet-decode-logging=true
+            - -jar
+            - /waterfall.jar
           ports:
             - containerPort: 25565
               name: mc
@@ -23,16 +32,41 @@ spec:
             - name: config-volume
               mountPath: /data/config.yml
               subPath: config.yml
+            - name: redstonecloud-plugin-volume
+              mountPath: /data/plugins
           tty: true
           stdin: true
           env:
             - name: REDSTONECLOUD_PROXY
               value: 'true'
+            - name: REDSTONECLOUD_PROXY_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_PROXY_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_PROXY_DB_KEY_SET
+              valueFrom:
+                secretKeyRef:
+                  key: set-key
+                  name: lobby-db-secret
+            - name: REDSTONECLOUD_PROXY_DB_KEY_MAP
+              valueFrom:
+                secretKeyRef:
+                  key: map-key
+                  name: lobby-db-secret
       restartPolicy: Always
       volumes:
         - name: config-volume
           configMap:
             name: lobby-proxy-configmap
+        - name: redstonecloud-plugin-volume
+          hostPath:
+            path: /data/redstonecloud-plugin-volume
   selector:
     matchLabels:
       app: lobby-proxy

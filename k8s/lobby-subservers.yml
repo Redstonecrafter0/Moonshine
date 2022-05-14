@@ -14,15 +14,20 @@ spec:
     spec:
       containers:
         - name: lobby-subservsers
-          image: daweedpanic/papermc:1.18.2
+          image: derkades/paper:1.18.2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 25565
               name: mc
-#          volumeMounts:
-#            - name: config-volume
-#              mountPath: /data/config.yml
-#              subPath: config.yml
+          volumeMounts:
+            - name: config-volume
+              mountPath: /data/server.properties
+              subPath: server.properties
+            - name: config-volume
+              mountPath: /data/spigot.yml
+              subPath: spigot.yml
+            - name: redstonecloud-plugin-volume
+              mountPath: /data/plugins
           tty: true
           stdin: true
           env:
@@ -57,10 +62,13 @@ spec:
                   key: map-key
                   name: lobby-db-secret
       restartPolicy: Always
-#      volumes:
-#        - name: config-volume
-#          configMap:
-#            name: lobby-subservers-configmap
+      volumes:
+        - name: config-volume
+          configMap:
+            name: lobby-subservers-configmap
+        - name: redstonecloud-plugin-volume
+          hostPath:
+            path: /data/redstonecloud-plugin-volume
   selector:
     matchLabels:
       app: lobby-subservers
