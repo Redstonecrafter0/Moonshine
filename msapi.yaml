@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: MSAPI/MSIAPI
+  description: |
+    Moonshine API / Moonshine Instance API
+    
+    
+    The MSAPI is used for controlling the network (via i.e. Web or other UI).
+    
+    The MSIAPI is used is used internally and is part of every deployed server on the network.
+    The MSIAPI should not be exposed anywhere (except for kubectl proxy when testing).
+  version: 1.0.0
+servers:
+  - url: 'https://localhost:42069'
+paths:
+  /msapi/v1/server:
+    get:
+      description: Lists the servers of the network
+      summary: List the servers
+      operationId: listServers
+      security:
+        - {}
+        - bearer: []
+      parameters:
+        - name: type
+          schema:
+            type: string
+            enum:
+              - 'proxy'
+              - 'ingress'
+              - 'game'
+          in: query
+      responses:
+        200:
+          description: List of the servers
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ServerList'
+        401:
+          $ref: '#/components/responses/401'
+  /msapi/v1/server/{serverId}:
+    get:
+      description: Get a single server by its id from the network
+      summary: Get server by id
+      operationId: getServer
+      security:
+        - {}
+        - bearer: []
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+          name: serverId
+      responses:
+        200:
+          description: The server
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Server'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          description: Server not found.
+          $ref: '#/components/responses/404'
+  /msapi/v1/server/{serverId}/console:
+    get:
+      description: Open a console to the server
+      summary: Open server console
+      operationId: consoleServer
+      security:
+        - {}
+        - bearer: []
+      parameters:
+        - $ref: "#/components/parameters/ServerId"
+          name: serverId
+      responses:
+        101:
+          description: Switching to websocket communication
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ConsoleFrame'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+  /msiapi/v1/server/console:
+    get:
+      description: Open a console to the server
+      summary: Open server console
+      operationId: internalConsoleServer
+      security:
+        - {}
+        - clientCert: []
+      parameters:
+        - $ref: "#/components/parameters/ServerId"
+          name: serverId
+      responses:
+        101:
+          description: Switching to websocket communication
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ConsoleFrame'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+  /msiapi/v1/rpc:
+    get:
+      description: Used for internal RPC
+      summary: RPC
+      operationId: internalRpc
+      security:
+        - {}
+        - clientCert: []
+      responses:
+        101:
+          description: Switching to websocket communication
+          content:
+            '*/*':
+              schema:
+                example: KRPC
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: A bearer token.
+    clientCert:
+      type: mutualTLS
+      description: A client certificate that is trusted by the same CA as the server certificate.
+  schemas:
+    ServerId:
+      type: string
+      pattern: '[a-z0-9][a-z0-9\-]*'
+    ServerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Server'
+    Server:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ServerId'
+          description: The hostname if not overridden
+        port:
+          type: number
+          example: 42069
+          description: MSAPI port
+    Error:
+      type: object
+      properties:
+        reason:
+          type: string
+    ConsoleFrame:
+      type: object
+      properties:
+        std:
+          type: string
+          enum:
+            - 'in'
+            - 'out'
+            - 'err'
+          description: The client can only send stdin and the server can only send stdout and stderr.
+        data:
+          type: string
+          description: The raw stdio stream data
+  parameters:
+    ServerId:
+      description: The id of the server.
+      in: path
+      schema:
+        $ref: '#/components/schemas/ServerId'
+  responses:
+    401:
+      description: Unauthorized. The server requires authentication but none is provided.
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Error'
+    404:
+      description: Not found.
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Error'

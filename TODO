@@ -1,4 +1,4 @@
 Dokka
 CI/CD
-Minestom
-Use Multicast for discovery
+Minestom support
+Wrap Minecraft Protocol in TLS and later QUIC. Needed for proxy downstream connections. Maybe useful for server staff certificate authentication.

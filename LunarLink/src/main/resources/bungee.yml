@@ -1,0 +1,4 @@
+name: Moonshine-Plugin
+main: dev.redstones.moonshine.lunarlink.impl.bungee.LunarLinkBungee
+version: ${version}
+description: 'Bungeecord/Waterfall integration for a cloud-native Minecraft network.'

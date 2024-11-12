@@ -1,15 +1,7 @@
-rootProject.name = "Redstonecloud"
-
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    plugins {
-        val kotlinVersion: String by System.getProperties()
-        kotlin("jvm") version kotlinVersion
-        kotlin("plugin.serialization") version kotlinVersion
-    }
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
-
-include("Redstonecloud-Plugin")
+rootProject.name = "Moonshine"
+include("Gateway")
+include("LunarLink")
+include("Common")

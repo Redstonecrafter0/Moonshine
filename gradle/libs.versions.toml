@@ -1,0 +1,70 @@
+[versions]
+kotlin = "2.1.0-RC"
+dokka = "1.6.10"
+shadow = "8.1.1"
+ktor = "3.0.1"
+kotlinx-serialization-json = "1.7.0"
+jedis = "5.1.3"
+gson = "2.10.0"
+adventure = "4.17.0"
+
+luckperms = "5.4"
+bouncycastle = "1.79"
+
+bukkit = "1.8.8-R0.1-SNAPSHOT"
+bungeecord = "1.16-R0.5-SNAPSHOT"
+velocity = "3.4.0-SNAPSHOT"
+
+protocollib = "5.3.0"
+
+apache-commons-validator = "1.9.0"
+slf4j = "2.0.13"
+log4j2 = "2.23.1"
+
+moonshine = "0.1.0"
+
+[libraries]
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+apache-commons-validator = { module = "commons-validator:commons-validator", version.ref = "apache-commons-validator" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+log4j2-slf4j = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j2" }
+
+adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure" }
+adventure-text-serializer-gson = { module = "net.kyori:adventure-text-serializer-gson", version.ref = "adventure" }
+
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+ktor-network-tls = { module = "io.ktor:ktor-network-tls", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+
+bukkit = { module = "org.bukkit:bukkit", version.ref = "bukkit" }
+bungeecord = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }
+velocity = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
+
+protocollib = { module = "com.comphenix.protocol:ProtocolLib", version.ref = "protocollib" }
+
+bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+
+[bundles]
+pluginapis = [ "bukkit", "bungeecord", "velocity" ]
+ktor-server = [ "ktor-server-core", "ktor-server-netty" ]
+ktor-client = [ "ktor-client-core", "ktor-client-cio" ]
+ktor-network = [ "ktor-network", "ktor-network-tls" ]
+adventure = [ "adventure-api", "adventure-text-serializer-legacy", "adventure-text-serializer-gson" ]
+logging = [ "slf4j-api", "log4j2-slf4j" ]
+bouncycastle = [ "bcpkix-jdk18on", "bcprov-jdk18on" ]
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }

@@ -1,80 +1,35 @@
-# Redstonecloud
+# Moonshine
 
 This project is currently under development and far from finished. Using it is currently not possible, but you can investigate the source code and test it out if you know what you're doing.
 
-## Goal
-The goal is to build an ecosystem around Minecraft networks providing a web interface (maybe).
+## The Goal
+is to build a highly scalable infrastructure for Minecraft networks providing and later an optional web interface to manage everything.
 It runs on Kubernetes to be highly capable and organized.
-Using LoadBalancers for Proxies allows a giant number of players on the same network.
-To horizontally scale the system, the plugin provides some metrics to Kubernetes.
+Using Gateways for Proxies allows a giant number of players on the same Minecraft network.
+To horizontally scale the system, the plugin provides metrics.
 
-You can join [here](https://discord.gg/aZKuas4) to discuss this project or use the discussion tab.
+You can join [here](https://discord.gg/aZKuas4) to discuss this project or use the discussions tab of GitHub.
 
 ## Concept
-The concept is to take advantage of how Kubernetes is built.
-We have 3 layers in this example, but you can do whatever you want.
-After going through the LoadBalancer the player connects to one of the Entry Proxies.
-Every Entry Proxy knows the Services of the Game Proxies which are load balanced as well.
-Game Proxies are there to organize your network. So Game Proxies build up groups (one group for lobbies, one group for Skyblock, etc.) and know each Game Server.
-So the load can be balanced across the network.
-Additionally, this plugin provides metrics to allow horizontal scaling using something like player count to limit player count on a Game Server if the game is built to be 2v2 for example.
-On top of that, this plugin provides an API on Proxy Servers to programmatically create Game Servers for something like private Game Servers.
+The base idea is to create a highly available and highly scalable Minecraft Server Network Infrastructure.
 
-```mermaid
-flowchart TB
-    entrypoint[Entrypoint] --> loadbalancer[Load Balancer]:::service --> proxy_1 & proxy_2 --> lobby_entrypoint & game_1_entrypoint & game_2_entrypoint
-    subgraph proxies [Entry Proxies]
-        proxy_1[Proxy]:::proxy
-        proxy_2[Proxy]:::proxy
-    end
+In order to achieve that goal we are very opinionated on how to do things.
 
-    subgraph subproxies [Game Proxies]
-        lobbyproxy_db_1[(Database)]:::db
-        game_1_proxy_db_1[(Database)]:::db
-        game_2_proxy_db_1[(Database)]:::db
+These key points must be considered at all times:
+- The network should theoretically be able to scale infinitely.
+- The ping of all players should be as low as possible.
+- Minecraft Clients down to 1.8 should be supported.
+- Security is crucial.
+- Updates (of plugins, servers etc.) should not be disruptive.
+- A crash should be as non-disruptive as possible. E.g. switch to another lobby or a game server that can recover the previous state.
+- Servers, Gateways and Proxies should be statically or dynamically provisioned and unprovisioned.
+- Central databases should be avoided whenever possible. If absolutely needed a database must be able to scale infinitely according to it's requirements.
 
-        subgraph lobbyproxies [Lobby Proxies]
-            lobby_entrypoint[Service]:::service --> lobby_proxy_1[Proxy] & lobby_proxy_2[Proxy]
-        end
-        subgraph game1proxies [Game 1 Proxies]
-            game_1_entrypoint[Service]:::service --> game_1_proxy_1[Proxy] & game_1_proxy_2[Proxy]
-        end
-        subgraph game2proxies [Game 2 Proxies]
-            game_2_entrypoint[Service]:::service --> game_2_proxy_1[Proxy] & game_2_proxy_2[Proxy]
-        end
-    end
-    
-    lobby_proxy_1 & lobby_proxy_2 -.- lobbyproxy_db_1 -.- lobby_sub_1 & lobby_sub_2
-    game_1_proxy_1 & game_1_proxy_2 -.- game_1_proxy_db_1 -.- game_1_sub_1 & game_1_sub_2
-    game_2_proxy_1 & game_2_proxy_2 -.- game_2_proxy_db_1 -.- game_2_sub_1 & game_2_sub_2
-    
-    subgraph gameservers [Game Servers]
-        lobby_proxy_1 & lobby_proxy_2 ---> lobby_sub_1 & lobby_sub_2
-        game_1_proxy_1 & game_1_proxy_2 ---> game_1_sub_1 & game_1_sub_2
-        game_2_proxy_1 & game_2_proxy_2 ---> game_2_sub_1 & game_2_sub_2
+## Architecture
+![](Moonshine_Architecture.drawio.svg)
 
-        subgraph lobby_sub [Lobby Subservers]
-            lobby_sub_1[Lobby Subserver 1]:::game
-            lobby_sub_2[Lobby Subserver 2]:::game
-        end
-        subgraph game_1_sub [Game 1 Subservers]
-            game_1_sub_1[Game 1 Subserver 1]:::game
-            game_1_sub_2[Game 1 Subserver 2]:::game
-        end
-        subgraph game_2_sub [Game 2 Subservers]
-            game_2_sub_1[Game 2 Subserver 1]:::game
-            game_2_sub_2[Game 2 Subserver 2]:::game
-        end
-    end
-    
-    classDef default fill:#121213,color:white,stroke:white;
-    classDef proxy fill:#0f0,color:black;
-    classDef game fill:yellow,color:black;
-    classDef db fill:grey;
-    classDef service fill:#326ce5;
-    classDef outer fill:#222;
-
-    class subproxies,gameservers,proxies outer;
-
-    class lobby_proxy_1,lobby_proxy_2,game_1_proxy_1,game_1_proxy_2,game_2_proxy_1,game_2_proxy_2 proxy;
-```
+# Transfer Packet
+The transfer packet was introduced in 1.20.5.
+The Gateway would be unnecessary with that packet as the proxy can just move the player to another one.
+This however does not work with clients up to 1.20.4 and therefore the Gateway is needed.
+This feature alongside the new cookies will be used anyway to seamlessly move players to other proxies when they are restarted for supported clients.

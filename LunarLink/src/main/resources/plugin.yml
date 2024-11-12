@@ -1,0 +1,7 @@
+name: LunarLink
+main: dev.redstones.moonshine.plugin.LunarLink
+version: ${version}
+description: 'Bukkit/Spigot/Paper integration for a cloud-native Minecraft network.'
+website: 'https://github.com/Redstonecrafter0/Moonshine'
+depend:
+  - ProtocolLib
