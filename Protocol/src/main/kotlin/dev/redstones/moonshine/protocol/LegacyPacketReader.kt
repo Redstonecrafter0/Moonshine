@@ -3,6 +3,10 @@ package dev.redstones.moonshine.protocol
 import dev.redstones.moonshine.protocol.packet.*
 import dev.redstones.moonshine.packet.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 enum class LegacyPacketReader(val direction: Direction, val packetId: UByte) {
 
@@ -42,12 +46,14 @@ enum class LegacyPacketReader(val direction: Direction, val packetId: UByte) {
         }
 
         @OptIn(ExperimentalStdlibApi::class)
-        suspend fun read(direction: Direction, receiveChannel: ByteReadChannel): IPacket<UByte> {
-            val packetId = receiveChannel.readUByte()
-            val packet = packets[direction]?.get(packetId)
-                ?: throw ProtocolException("Unsupported ${direction.name.lowercase()} packet ${packetId.toHexString()}")
-            return packet.read(receiveChannel)
-        }
+        fun read(direction: Direction, receiveChannel: ByteReadChannel): Flow<IPacket<UByte>> = flow {
+            while (true) { // cancelled from outside
+                val packetId = receiveChannel.readUByte()
+                val packet = packets[direction]?.get(packetId)
+                    ?: throw ProtocolException("Unsupported ${direction.name.lowercase()} packet ${packetId.toHexString()}")
+                emit(packet.read(receiveChannel))
+            }
+        }.flowOn(Dispatchers.IO)
     }
 
 }

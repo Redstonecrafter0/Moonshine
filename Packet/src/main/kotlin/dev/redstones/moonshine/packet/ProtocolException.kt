@@ -1,3 +1,5 @@
 package dev.redstones.moonshine.packet
 
-class ProtocolException(message: String): Exception(message)
+import kotlinx.io.IOException
+
+class ProtocolException(message: String): IOException(message)

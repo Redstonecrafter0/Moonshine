@@ -1,29 +1,22 @@
 package dev.redstones.moonshine.gateway
 
-import dev.redstones.moonshine.common.dns.IServerIdResolver
-import dev.redstones.moonshine.common.token.RoutingToken
 import dev.redstones.moonshine.common.util.addressString
 import dev.redstones.moonshine.packet.ProtocolException
-import dev.redstones.moonshine.protocol.State
-import dev.redstones.moonshine.protocol.packet.PacketInLoginStartLogin
-import dev.redstones.moonshine.protocol.packet.PacketInStatusPingRequest
-import dev.redstones.moonshine.protocol.packet.PacketInStatusStatusRequest
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.io.EOFException
 import kotlinx.io.IOException
 import kotlinx.io.bytestring.ByteString
 import org.slf4j.LoggerFactory
 import java.net.SocketTimeoutException
 
-class IngressController {
+class Gateway {
 
     companion object {
-        val logger = LoggerFactory.getLogger(IngressController::class.java)
+        val logger = LoggerFactory.getLogger(Gateway::class.java)
     }
 
     private val selectorManager = SelectorManager(Dispatchers.IO)
@@ -42,28 +35,38 @@ class IngressController {
         runBlocking {
             while (true) {
                 val clientConnection = serverSocket.accept().connection()
-                launch {
+                launch(Dispatchers.IO) {
                     logger.debug("Accepted socket connection from {}", clientConnection.socket.addressString)
+                    var client: BaseClient? = null
                     try {
-                        when (detectProtocol(clientConnection)) {
-                            GatewayProtocol.Minecraft -> handleClient(Client(clientConnection))
-                            GatewayProtocol.LegacyMinecraft -> Client(clientConnection).handleLegacyServerList()
-                            GatewayProtocol.MinecraftTLS -> TODO("currently server-side tls in ktor-network is missing")
-                            GatewayProtocol.MinecraftQuic -> error("QUIC is UDP based")
+                        try {
+                            client = when (detectProtocol(clientConnection)) {
+                                GatewayProtocol.Minecraft -> MinecraftClient(clientConnection, selectorManager)
+                                GatewayProtocol.LegacyMinecraft -> LegacyClient(clientConnection, selectorManager)
+                                GatewayProtocol.MinecraftTLS -> TODO("currently server-side tls in ktor-network is missing")
+                                GatewayProtocol.MinecraftQuic -> error("QUIC is UDP based")
+                            }
+                            client.handleClientConnection()
+                        } catch (e: ClosedReceiveChannelException) {
+                            // client closed connection
+                            logger.trace("${clientConnection.socket.addressString} closed connection")
+                        } catch (e: EOFException) {
+                            // client closed connection
+                            logger.trace("${clientConnection.socket.addressString} closed connection")
+                        } catch (e: SocketTimeoutException) {
+                            logger.trace("${clientConnection.socket.addressString} timed out", e)
+                        } catch (e: ProtocolException) {
+                            logger.trace("protocol error", e)
+                        } catch (e: IOException) {
+                            // client closed connection
+                            logger.trace("${clientConnection.socket.addressString} closed connection", e)
+                        } catch (e: Throwable) {
+                            logger.error("unexpected error", e)
                         }
-                    } catch (e: ClosedReceiveChannelException) {
-                        // client closed connection
-                        logger.trace("{} closed connection", clientConnection.socket.addressString)
-                    } catch (e: SocketTimeoutException) {
-                        // socket timed out
-                        logger.trace("{} timed out", clientConnection.socket.addressString)
-                    } catch (e: IOException) {
-                        // client closed connection
-                        logger.trace("{} closed connection", clientConnection.socket.addressString)
+                        client?.close() ?: clientConnection.socket.close()
                     } catch (e: Throwable) {
-                        logger.error("unexpected error", e)
+                        logger.error("crash prevented", e)
                     }
-                    clientConnection.socket.close()
                 }
             }
         }
@@ -80,33 +83,8 @@ class IngressController {
         }
     }
 
-    private suspend fun handleClient(client: Client) {
-        val handshakePacket = client.readHandshakePacket()
-        logger.trace("received {}", handshakePacket)
-        client.state = handshakePacket.nextState
-        while (true) {
-            when (client.state) {
-                State.Status -> when (val packet = client.readPacket()) {
-                    is PacketInStatusStatusRequest -> client.handleStatusRequest(handshakePacket)
-                    is PacketInStatusPingRequest -> client.handlePing(packet)
-                    else -> throw ProtocolException("unexpected packet in status state") // unreachable
-                }
-                State.Login, State.Transfer -> when (val packet = client.readPacket()) {
-                    is PacketInLoginStartLogin -> client.login(handshakePacket, packet.name, packet.uuid, selectorManager, RoutingToken.Verifier.randomVerifier(), "eu-central-1-lobby", object: IServerIdResolver {
-                        override fun resolveRoutingToken(token: RoutingToken): Pair<String, Int> {
-                            return "localhost" to 25577
-                        }
-                    })
-                    else -> throw ProtocolException("unexpected packet in login state") // unreachable
-                }
-                State.Proxied -> client.forwardData()
-                else -> throw ProtocolException("invalid state")
-            }
-        }
-    }
-
 }
 
 fun main() {
-    IngressController().loop()
+    Gateway().loop()
 }

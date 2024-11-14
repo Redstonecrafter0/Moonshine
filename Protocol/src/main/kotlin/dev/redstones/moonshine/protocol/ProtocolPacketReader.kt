@@ -4,6 +4,12 @@ import dev.redstones.moonshine.protocol.packet.*
 import dev.redstones.moonshine.packet.*
 import dev.redstones.moonshine.packet.channel.LimitedSizeByteReadChannel
 import io.ktor.utils.io.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 enum class ProtocolPacketReader(val direction: Direction, val state: State, val packetId: Int) {
 
@@ -64,12 +70,16 @@ enum class ProtocolPacketReader(val direction: Direction, val state: State, val 
             }
         }
 
-        suspend fun read(direction: Direction, state: State, receiveChannel: ByteReadChannel): IPacket<Int> {
-            val channel = LimitedSizeByteReadChannel(receiveChannel, receiveChannel.readVarInt())
-            val packetId = channel.readVarInt()
-            val packet = packets[direction]?.get(state)?.get(packetId) ?: throw ProtocolException("Unsupported packet or state")
-            return packet.read(channel)
-        }
+        fun read(direction: Direction, stateProducer: ReceiveChannel<State>, receiveChannel: ByteReadChannel): Flow<IPacket<Int>> = flow {
+            while (true) {
+                val state = stateProducer.receive()
+                if (state.stopReading) return@flow
+                val channel = LimitedSizeByteReadChannel(receiveChannel, receiveChannel.readVarInt())
+                val packetId = channel.readVarInt()
+                val packet = packets[direction]?.get(state)?.get(packetId) ?: throw ProtocolException("Unsupported packet or state")
+                emit(packet.read(channel))
+            }
+        }.flowOn(Dispatchers.IO)
     }
 
 }

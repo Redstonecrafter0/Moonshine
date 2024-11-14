@@ -34,7 +34,7 @@ Here are some key points when using a database.
 - In case of cross-region communication traffic should be minimized as much as possible.
 - The database should be a sharded cluster with at least two replicas of a shard in the region where it is needed.
 - Everything that uses a database must be able to only cause load on the affected shard.
-- Load should be somewhat equally distributed across shards. For that shard-keys like a hashed UUID or server-id should be used.
+- Load should be somewhat equally distributed across shards. For that shard-keys like a hashed UUID or server-id should always be used.
 
 ### Do's
 - Store player statistics with the players UUID as shard-key and only hit the needed shard.
@@ -46,7 +46,7 @@ Here are some key points when using a database.
 ### Dont's
 - Don't use a randomly generated id for shard-keys.
 - Don't hit shards that aren't responsible for the used key.
-- Don't store a single value for more than one thing.
+- Don't store a single value for more than one thing (player, server, clan, etc.).
 - Don't store a player count of the entire network. Instead, use monitoring to aggregate such numbers.
 
 ## Architecture

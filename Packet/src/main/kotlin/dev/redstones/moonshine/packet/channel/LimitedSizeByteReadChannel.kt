@@ -1,7 +1,7 @@
 package dev.redstones.moonshine.packet.channel
 
-import dev.redstones.moonshine.packet.ProtocolException
 import io.ktor.utils.io.*
+import kotlinx.io.EOFException
 
 class LimitedSizeByteReadChannel(private val channel: ByteReadChannel, val size: Int): ByteReadChannel by channel {
 
@@ -31,7 +31,7 @@ class LimitedSizeByteReadChannel(private val channel: ByteReadChannel, val size:
     private fun failSize(increment: Int) {
         pos += increment
         if (pos > size) {
-            throw ProtocolException("Packet size too small")
+            throw EOFException("Packet size too small")
         }
     }
 
