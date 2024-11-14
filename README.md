@@ -25,10 +25,34 @@ These key points must be considered at all times:
 - Servers, Gateways and Proxies should be statically or dynamically provisioned and unprovisioned.
 - Central databases should be avoided whenever possible. If absolutely needed a database must be able to scale infinitely according to it's requirements.
 
+## Databases
+For the goals defined above here are some more details on how to work with databases.  
+Everything that can be stateless should be stateless. Therefore, databases should be prevented wherever possible.
+
+In some cases a database is still definitely needed. Everything that uses that database should be carefully modeled to ensure theoretical infinite scalability.
+Here are some key points when using a database.
+- In case of cross-region communication traffic should be minimized as much as possible.
+- The database should be a sharded cluster with at least two replicas of a shard in the region where it is needed.
+- Everything that uses a database must be able to only cause load on the affected shard.
+- Load should be somewhat equally distributed across shards. For that shard-keys like a hashed UUID or server-id should be used.
+
+### Do's
+- Store player statistics with the players UUID as shard-key and only hit the needed shard.
+- Store player bans with the UUID as the shard-key and only hit the needed shard.
+- Store an id (possibly internally) to a players clan with the shard-key being the players UUID. This might hit a second shard with clan information.
+- Use the shortest reference path possible to hit the least shards possible.
+- In case of MongoDB use mongos.
+
+### Dont's
+- Don't use a randomly generated id for shard-keys.
+- Don't hit shards that aren't responsible for the used key.
+- Don't store a single value for more than one thing.
+- Don't store a player count of the entire network. Instead, use monitoring to aggregate such numbers.
+
 ## Architecture
 ![](Moonshine_Architecture.drawio.svg)
 
-# Transfer Packet
+## Transfer Packet
 The transfer packet was introduced in 1.20.5.
 The Gateway would be unnecessary with that packet as the proxy can just move the player to another one.
 This however does not work with clients up to 1.20.4 and therefore the Gateway is needed.
