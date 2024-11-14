@@ -50,14 +50,12 @@ suspend fun ByteReadChannel.readString(maxSize: Int = 32764): String {
     if (size > maxSize) {
         throw ProtocolException("String too big")
     }
-    return ByteArray(size) { readByte() }.decodeToString()
+    return readByteArray(size).decodeToString()
 }
 
 suspend fun ByteWriteChannel.writeString(string: ByteArray) {
     writeVarInt(string.size)
-    for (i in string) {
-        writeByte(i)
-    }
+    writeByteArray(string)
 }
 
 suspend fun ByteReadChannel.readUShort(): Int {

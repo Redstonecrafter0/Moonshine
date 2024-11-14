@@ -123,7 +123,7 @@ data class LegacyPacketInPluginMessage(val id: String, val payload: ByteArray): 
         channel.writeByteArray(payload)
         channel.flush()
         channel.flushWriteBuffer()
-        return LegacyPingHost(channel.readUByte(), channel.readLegacyString(), channel.readInt())
+        return LegacyPingHost(channel.readUByte(), channel.readLegacyString(255), channel.readInt())
     }
 
     override fun equals(other: Any?): Boolean {

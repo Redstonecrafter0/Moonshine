@@ -25,7 +25,7 @@ enum class LegacyPacketReader(val direction: Direction, val packetId: UByte) {
     },
     OutKick(Direction.Outbound, 0xFFu) {
         override suspend fun read(channel: ByteReadChannel): IPacket<UByte> {
-            return LegacyPacketOutKick(channel.readLegacyString())
+            return LegacyPacketOutKick(channel.readLegacyString(1024)) // unused. 1024 is a reasonable limit
         }
     }
 
