@@ -1,4 +1,4 @@
-package dev.redstones.moonshine.common.protocol.dns
+package dev.redstones.moonshine.common.dns
 
 data class RecordSrv(
     val priority: Int,

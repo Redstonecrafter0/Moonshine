@@ -1,8 +1,7 @@
-package dev.redstones.moonshine.common.protocol
+package dev.redstones.moonshine.packet
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import java.nio.charset.CodingErrorAction
 import java.util.UUID
 
 
@@ -16,9 +15,9 @@ suspend fun ByteReadChannel.readVarInt(firstByte: Byte? = null): Int {
     var currentByte: Int = firstByte?.toInt() ?: readByte().toInt()
 
     while (true) {
-        value = value or ((currentByte and dev.redstones.moonshine.common.protocol.SEGMENT_BITS) shl position)
+        value = value or ((currentByte and SEGMENT_BITS) shl position)
 
-        if ((currentByte and dev.redstones.moonshine.common.protocol.CONTINUE_BIT) == 0) break
+        if ((currentByte and CONTINUE_BIT) == 0) break
 
         position += 7
 
@@ -34,12 +33,12 @@ suspend fun ByteReadChannel.readVarInt(firstByte: Byte? = null): Int {
 suspend fun ByteWriteChannel.writeVarInt(value: Int) {
     var value = value
     while (true) {
-        if ((value and dev.redstones.moonshine.common.protocol.SEGMENT_BITS.inv()) == 0) {
+        if ((value and SEGMENT_BITS.inv()) == 0) {
             writeByte(value.toByte())
             return
         }
 
-        writeByte(((value and dev.redstones.moonshine.common.protocol.SEGMENT_BITS) or dev.redstones.moonshine.common.protocol.CONTINUE_BIT).toByte())
+        writeByte(((value and SEGMENT_BITS) or CONTINUE_BIT).toByte())
 
         // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
         value = value ushr 7
@@ -69,14 +68,26 @@ suspend fun ByteWriteChannel.writeUShort(short: Int) {
     writeShort(short.toUShort().toShort())
 }
 
-suspend fun ByteWriteChannel.writeHead(packet: PacketReader, size: Int) {
-    writeVarInt(size + packet.packetId.getVarIntSize())
-    writeVarInt(packet.packetId)
+suspend fun ByteReadChannel.readUByte(): UByte {
+    return readByte().toUByte()
 }
 
-suspend fun ByteWriteChannel.writeHead(packetId: Int, size: Int) {
-    writeVarInt(size + packetId.getVarIntSize())
-    writeVarInt(packetId)
+suspend fun ByteWriteChannel.writeUByte(byte: UByte) {
+    writeByte(byte.toByte())
+}
+
+enum class PacketLengthPrefix(val write: suspend ByteWriteChannel.(Int) -> Unit) {
+    VarInt(ByteWriteChannel::writeVarInt)
+}
+
+@OptIn(InternalAPI::class)
+suspend fun ByteWriteChannel.writeWithPrefixedLength(lengthPrefix: PacketLengthPrefix, block: suspend ByteWriteChannel.() -> Unit): Int {
+    val tmpBuffer = ByteChannel(false)
+    tmpBuffer.block()
+    tmpBuffer.flushWriteBuffer()
+    val size = tmpBuffer.availableForRead
+    lengthPrefix.write(this, size)
+    return tmpBuffer.readBuffer.transferTo(writeBuffer).toInt()
 }
 
 suspend fun ByteReadChannel.readUuid(): UUID {
@@ -88,19 +99,17 @@ suspend fun ByteWriteChannel.writeUuid(uuid: UUID) {
     writeLong(uuid.leastSignificantBits)
 }
 
-suspend fun ByteReadChannel.legacyReadString(maxSize: Int = Short.MAX_VALUE.toInt()): String {
-    val charSize = readShort()
+suspend fun ByteReadChannel.readLegacyString(maxSize: Int = Short.MAX_VALUE.toInt()): String {
+    val charSize = readUShort()
     if (charSize > maxSize) {
         throw ProtocolException("String too big")
     }
-    return String(ByteArray(charSize * 2) { readByte() }, Charsets.UTF_16BE) // all legal domain names and ip addresses have only 2 bytes per char
+    return String(readByteArray(charSize * 2), Charsets.UTF_16BE) // all legal domain names and ip addresses have only 2 bytes per char
 }
 
-suspend fun ByteWriteChannel.legacyWriteString(string: String) {
-    writeShort(string.length.toShort())
-    for (i in string.toByteArray(Charsets.UTF_16BE)) {
-        writeByte(i)
-    }
+suspend fun ByteWriteChannel.writeLegacyString(string: String) {
+    writeUShort(string.length)
+    writeByteArray(string.toByteArray(Charsets.UTF_16BE))
 }
 
 fun Int.getVarIntSize(): Int {

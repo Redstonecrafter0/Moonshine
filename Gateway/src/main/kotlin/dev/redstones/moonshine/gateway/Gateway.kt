@@ -1,16 +1,15 @@
 package dev.redstones.moonshine.gateway
 
+import dev.redstones.moonshine.common.dns.IServerIdResolver
 import dev.redstones.moonshine.common.token.RoutingToken
-import dev.redstones.moonshine.common.protocol.ProtocolException
-import dev.redstones.moonshine.common.protocol.packet.PacketInLoginStartLogin
-import dev.redstones.moonshine.common.protocol.packet.PacketInStatusPingRequest
-import dev.redstones.moonshine.common.protocol.packet.PacketInStatusStatusRequest
-import dev.redstones.moonshine.common.protocol.State
-import dev.redstones.moonshine.common.protocol.dns.IServerIdResolver
 import dev.redstones.moonshine.common.util.addressString
+import dev.redstones.moonshine.packet.ProtocolException
+import dev.redstones.moonshine.protocol.State
+import dev.redstones.moonshine.protocol.packet.PacketInLoginStartLogin
+import dev.redstones.moonshine.protocol.packet.PacketInStatusPingRequest
+import dev.redstones.moonshine.protocol.packet.PacketInStatusStatusRequest
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.network.tls.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
@@ -71,10 +70,12 @@ class IngressController {
     }
 
     private suspend fun detectProtocol(connection: Connection): GatewayProtocol {
-        val peekedBytes = connection.input.peek(3) ?: throw ClosedReceiveChannelException("failed to detect protocol")
+        val peekedBytes = connection.input.peek(2) ?: throw ClosedReceiveChannelException("failed to detect protocol")
         return when (peekedBytes) {
-            ByteString(byteArrayOf(0x16, 0x03, 0x04)) -> GatewayProtocol.MinecraftTLS // TLS1.3
-            ByteString(byteArrayOf(0xfe.toByte(), 0x01, 0xfa.toByte())) -> GatewayProtocol.LegacyMinecraft
+            // technically the RFC8446 forbids processing the second byte here, however most tls clients use a valid tls version (which always starts with 0x03)
+            // for backward compatibility. this will still always negotiate the use of tls1.3
+            ByteString(byteArrayOf(0x16, 0x03)) -> GatewayProtocol.MinecraftTLS
+            ByteString(byteArrayOf(0xFE.toByte(), 0x01)) -> GatewayProtocol.LegacyMinecraft
             else -> GatewayProtocol.Minecraft
         }
     }
@@ -86,7 +87,7 @@ class IngressController {
         while (true) {
             when (client.state) {
                 State.Status -> when (val packet = client.readPacket()) {
-                    is PacketInStatusStatusRequest -> client.handleStatusRequest()
+                    is PacketInStatusStatusRequest -> client.handleStatusRequest(handshakePacket)
                     is PacketInStatusPingRequest -> client.handlePing(packet)
                     else -> throw ProtocolException("unexpected packet in status state") // unreachable
                 }

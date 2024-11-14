@@ -1,11 +1,11 @@
-package dev.redstones.moonshine.common.protocol.slp
+package dev.redstones.moonshine.protocol.slp
 
-import dev.redstones.moonshine.common.protocol.Direction
-import dev.redstones.moonshine.common.protocol.PacketReader
-import dev.redstones.moonshine.common.protocol.State
-import dev.redstones.moonshine.common.protocol.packet.PacketInHandshakingHandshake
-import dev.redstones.moonshine.common.protocol.packet.PacketInStatusStatusRequest
-import dev.redstones.moonshine.common.protocol.packet.PacketOutStatusStatusResponse
+import dev.redstones.moonshine.protocol.Direction
+import dev.redstones.moonshine.protocol.ProtocolPacketReader
+import dev.redstones.moonshine.protocol.State
+import dev.redstones.moonshine.protocol.packet.PacketInHandshakingHandshake
+import dev.redstones.moonshine.protocol.packet.PacketInStatusStatusRequest
+import dev.redstones.moonshine.protocol.packet.PacketOutStatusStatusResponse
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ object ServerListPinger {
             val sendChannel = socket.openWriteChannel(false)
             PacketInHandshakingHandshake(-1, host, port, State.Status).write(sendChannel)
             PacketInStatusStatusRequest.write(sendChannel)
-            val packet = PacketReader.read(Direction.Outbound, State.Status, receiveChannel) as? PacketOutStatusStatusResponse
+            val packet = ProtocolPacketReader.read(Direction.Outbound, State.Status, receiveChannel) as? PacketOutStatusStatusResponse
                 ?: return@withContext null
             socket.close()
             json.decodeFromString<ServerListPing>(packet.jsonResponse)

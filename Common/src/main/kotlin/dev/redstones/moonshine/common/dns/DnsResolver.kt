@@ -1,4 +1,4 @@
-package dev.redstones.moonshine.common.protocol.dns
+package dev.redstones.moonshine.common.dns
 
 import org.apache.commons.validator.routines.InetAddressValidator
 import java.util.*

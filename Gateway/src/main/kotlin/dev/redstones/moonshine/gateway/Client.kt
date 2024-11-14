@@ -1,12 +1,13 @@
 package dev.redstones.moonshine.gateway
 
-import dev.redstones.moonshine.common.protocol.*
-import dev.redstones.moonshine.common.protocol.packet.*
+import dev.redstones.moonshine.protocol.*
+import dev.redstones.moonshine.protocol.packet.*
 import dev.redstones.moonshine.common.token.RoutingToken
-import dev.redstones.moonshine.common.protocol.channel.LimitedSizeByteReadChannel
-import dev.redstones.moonshine.common.protocol.dns.IServerIdResolver
-import dev.redstones.moonshine.common.protocol.slp.ServerListPing
-import dev.redstones.moonshine.common.protocol.slp.ServerListPinger
+import dev.redstones.moonshine.common.dns.IServerIdResolver
+import dev.redstones.moonshine.packet.IPacket
+import dev.redstones.moonshine.packet.ProtocolException
+import dev.redstones.moonshine.protocol.slp.ServerListPing
+import dev.redstones.moonshine.protocol.slp.ServerListPinger
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
@@ -29,11 +30,11 @@ class Client(private val connection: Connection): Closeable {
     private var downstream: Connection? = null
 
     suspend fun readHandshakePacket(): PacketInHandshakingHandshake {
-        return PacketReader.read(Direction.Inbound, state, connection.input) as? PacketInHandshakingHandshake ?: throw ProtocolException("First packet must be Handshake")
+        return ProtocolPacketReader.read(Direction.Inbound, state, connection.input) as? PacketInHandshakingHandshake ?: throw ProtocolException("First packet must be Handshake")
     }
 
-    suspend fun readPacket(): IPacket {
-        return PacketReader.read(Direction.Inbound, state, connection.input)
+    suspend fun readPacket(): IPacket<Int> {
+        return ProtocolPacketReader.read(Direction.Inbound, state, connection.input)
     }
 
     suspend fun login(
@@ -74,51 +75,34 @@ class Client(private val connection: Connection): Closeable {
         }
     }
 
-    suspend fun handleStatusRequest() {
-        IngressController.logger.debug("received status request from {}", address)
-        val response = ServerListPinger.ping("127.0.0.1", 25577) ?: ServerListPing(
+    private suspend fun pingDownstream(host: String, port: Int): ServerListPing {
+        return ServerListPinger.ping("127.0.0.1", 25577) ?: ServerListPing(
             ServerListPing.Version("failed", 127),
             ServerListPing.Players(-1, 0, emptyList()),
         )
+    }
+
+    suspend fun handleStatusRequest(handshakePacket: PacketInHandshakingHandshake) {
+        IngressController.logger.info("received status request from {}", address)
+        val response = pingDownstream(handshakePacket.host, handshakePacket.port)
         IngressController.logger.trace("sending status response to {}", address)
         PacketOutStatusStatusResponse(Json.encodeToString(response)).write(connection.output)
     }
 
-    val expectedLegacyPingHead = byteArrayOf(0x01, 0xFA.toByte(), 0x00, 0x0B, 0x00, 0x4D, 0x00, 0x43, 0x00, 0x7C, 0x00, 0x50, 0x00, 0x69, 0x00, 0x6E, 0x00, 0x67, 0x00, 0x48, 0x00, 0x6F, 0x00, 0x73, 0x00, 0x74)
-
     suspend fun handleLegacyServerList() {
         IngressController.logger.info("received legacy status request from {}", address)
-        // 0XFE already read
-        for (i in expectedLegacyPingHead) {
-            if (connection.input.readByte() != i) {
-                return
-            }
-        }
-        val remaining = connection.input.readShort()
-        val channel = LimitedSizeByteReadChannel(connection.input, remaining.toInt())
-        channel.readByte() // protocol version
-        val host = channel.legacyReadString(128)
-        val port = channel.readInt()
-        if (channel.pos != channel.size) {
-            throw ProtocolException("malformed legacy packet")
-        }
-        sendLegacyServerList()
+        if (LegacyPacketReader.read(Direction.Inbound, connection.input) !is LegacyPacketInServerListPing) return
+        val serverListPing = (LegacyPacketReader.read(Direction.Inbound, connection.input) as? LegacyPacketInPluginMessage)?.decodePingHostMessage() ?: return
+        sendLegacyServerList(pingDownstream(serverListPing.host, serverListPing.port))
     }
 
-    private suspend fun sendLegacyServerList() {
-        val response = ServerListPinger.ping("127.0.0.1", 25577) ?: ServerListPing(
-            ServerListPing.Version("failed", 127),
-            ServerListPing.Players(-1, 0, emptyList()),
-            "{\"text\": \"failed\"}",
-            ""
-        )
+    private suspend fun sendLegacyServerList(serverListPing: ServerListPing) {
         IngressController.logger.trace("sending legacy status response to {}", address)
-        connection.output.writeByte(0xFF.toByte()) // packetId
-        val serverVersion = response.version.name
-        val motd = response.legacyDescription
-        val playerCount = response.players?.online?.toString() ?: "0"
-        val maxPlayerCount = response.players?.max?.toString() ?: "-1"
-        connection.output.legacyWriteString("§1\u0000127\u0000$serverVersion\u0000$motd\u0000$playerCount\u0000$maxPlayerCount") // 127 is an invalid protocol version
+        val serverVersion = serverListPing.version.name
+        val motd = serverListPing.legacyDescription
+        val playerCount = serverListPing.players?.online ?: 0
+        val maxPlayerCount = serverListPing.players?.max ?: -1
+        LegacyPacketOutKick(127, serverVersion, motd, playerCount, maxPlayerCount).write(connection.output) // 127 is an invalid protocol version
         connection.output.flush()
     }
 

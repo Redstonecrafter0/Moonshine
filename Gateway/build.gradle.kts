@@ -15,6 +15,8 @@ repositories {
 
 dependencies {
     implementation(project(":Common"))
+    implementation(project(":Protocol"))
+    implementation(project(":Packet"))
 //    implementation(libs.bundles.ktor.server)
 //    implementation(libs.bundles.ktor.client)
     implementation(libs.bundles.ktor.network)

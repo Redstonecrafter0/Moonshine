@@ -1,6 +1,6 @@
-package dev.redstones.moonshine.common.protocol.channel
+package dev.redstones.moonshine.packet.channel
 
-import dev.redstones.moonshine.common.protocol.ProtocolException
+import dev.redstones.moonshine.packet.ProtocolException
 import io.ktor.utils.io.*
 
 class LimitedSizeByteReadChannel(private val channel: ByteReadChannel, val size: Int): ByteReadChannel by channel {

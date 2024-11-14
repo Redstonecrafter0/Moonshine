@@ -1,4 +1,4 @@
-package dev.redstones.moonshine.common.protocol.slp
+package dev.redstones.moonshine.protocol.slp
 
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi

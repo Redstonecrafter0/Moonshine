@@ -1,4 +1,4 @@
-package dev.redstones.moonshine.common.protocol
+package dev.redstones.moonshine.protocol
 
 enum class Direction {
     Inbound,

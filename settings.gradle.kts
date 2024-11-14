@@ -5,3 +5,7 @@ rootProject.name = "Moonshine"
 include("Gateway")
 include("LunarLink")
 include("Common")
+include("QUIC")
+include("TLS")
+include("Protocol")
+include("Packet")
