@@ -4,7 +4,6 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import java.util.UUID
 
-
 private const val SEGMENT_BITS = 0x7F
 private const val CONTINUE_BIT = 0x80
 
@@ -58,8 +57,8 @@ suspend fun ByteWriteChannel.writeString(string: ByteArray) {
     writeByteArray(string)
 }
 
-suspend fun ByteReadChannel.readUShort(): Int {
-    return readShort().toUShort().toInt()
+suspend fun ByteReadChannel.readUShort(): UShort {
+    return readShort().toUShort()
 }
 
 suspend fun ByteWriteChannel.writeUShort(short: Int) {
@@ -88,6 +87,14 @@ suspend fun ByteWriteChannel.writeWithPrefixedLength(lengthPrefix: PacketLengthP
     return tmpBuffer.readBuffer.transferTo(writeBuffer).toInt()
 }
 
+@OptIn(InternalAPI::class)
+suspend fun ByteArray.toByteReadChannel(): ByteReadChannel {
+    val byteChannel = ByteChannel(false)
+    byteChannel.writeByteArray(this)
+    byteChannel.flushWriteBuffer()
+    return byteChannel
+}
+
 suspend fun ByteReadChannel.readUuid(): UUID {
     return UUID(readLong(), readLong())
 }
@@ -98,7 +105,7 @@ suspend fun ByteWriteChannel.writeUuid(uuid: UUID) {
 }
 
 suspend fun ByteReadChannel.readLegacyString(maxSize: Int = Short.MAX_VALUE.toInt()): String {
-    val charSize = readUShort()
+    val charSize = readUShort().toInt()
     if (charSize > maxSize) {
         throw ProtocolException("String too big")
     }

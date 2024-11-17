@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":Packet"))
     implementation(libs.bundles.bouncycastle)
     implementation(libs.ktor.network)
     testImplementation(kotlin("test"))

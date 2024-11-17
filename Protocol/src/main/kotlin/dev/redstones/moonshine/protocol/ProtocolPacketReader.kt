@@ -5,7 +5,6 @@ import dev.redstones.moonshine.packet.*
 import dev.redstones.moonshine.packet.channel.LimitedSizeByteReadChannel
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -18,7 +17,7 @@ enum class ProtocolPacketReader(val direction: Direction, val state: State, val 
             return PacketInHandshakingHandshake(
                 channel.readVarInt(),
                 channel.readString(128),
-                channel.readUShort(),
+                channel.readUShort().toInt(),
                 State.fromId(channel.readVarInt()) ?: throw ProtocolException("invalid next state")
             )
         }

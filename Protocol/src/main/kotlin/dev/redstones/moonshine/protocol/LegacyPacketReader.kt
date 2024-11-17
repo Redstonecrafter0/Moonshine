@@ -19,7 +19,7 @@ enum class LegacyPacketReader(val direction: Direction, val packetId: UByte) {
         override suspend fun read(channel: ByteReadChannel): IPacket<UByte> {
             return LegacyPacketInPluginMessage(
                 channel.readLegacyString(11), // only 'MC|PingHost' is accepted for this implementation
-                channel.readByteArray(channel.readUShort())
+                channel.readByteArray(channel.readUShort().toInt())
             )
         }
     },
