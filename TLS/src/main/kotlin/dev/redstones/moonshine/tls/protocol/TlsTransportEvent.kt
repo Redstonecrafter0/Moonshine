@@ -10,7 +10,8 @@ sealed class TlsTransportEvent {
             RecordOverflow("record_overflow"),
             UnexpectedMessage("unexpected_message"),
             HandshakeFailure("handshake_failure"),
-            InsufficientSecurity("insufficient_security")
+            InsufficientSecurity("insufficient_security"),
+            IllegalParameter("illegal_parameter")
         }
     }
 

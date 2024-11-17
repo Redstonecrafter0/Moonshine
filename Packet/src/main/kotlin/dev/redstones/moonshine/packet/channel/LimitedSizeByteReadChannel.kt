@@ -8,6 +8,9 @@ class LimitedSizeByteReadChannel(private val channel: ByteReadChannel, val size:
     var pos = 0
         private set
 
+    val isDone: Boolean
+        get() = pos > size
+
     suspend fun readByte(): Byte {
         failSize(1)
         return channel.readByte()
@@ -30,7 +33,7 @@ class LimitedSizeByteReadChannel(private val channel: ByteReadChannel, val size:
 
     private fun failSize(increment: Int) {
         pos += increment
-        if (pos > size) {
+        if (isDone) {
             throw EOFException("Packet size too small")
         }
     }
